@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Beer, Gift, ShoppingCart } from "lucide-react";
+import { Beer, Gift, ShoppingCart, Plus } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
 
 type Category = "rolee" | "cestas";
 
@@ -11,6 +12,7 @@ interface Product {
   name: string;
   description: string;
   price: string;
+  priceNumber: number;
   category: Category;
 }
 
@@ -20,6 +22,7 @@ const products: Product[] = [
     name: "Kit Boteco Clássico",
     description: "6 cervejas artesanais + petiscos selecionados",
     price: "R$ 129,90",
+    priceNumber: 129.90,
     category: "rolee",
   },
   {
@@ -27,6 +30,7 @@ const products: Product[] = [
     name: "Kit Premium Experience",
     description: "12 cervejas especiais + tábua de frios + snacks",
     price: "R$ 249,90",
+    priceNumber: 249.90,
     category: "rolee",
   },
   {
@@ -34,6 +38,7 @@ const products: Product[] = [
     name: "Kit Rolê Completo",
     description: "Mix de bebidas + aperitivos + jogos de bar",
     price: "R$ 189,90",
+    priceNumber: 189.90,
     category: "rolee",
   },
   {
@@ -41,6 +46,7 @@ const products: Product[] = [
     name: "Cesta Gourmet",
     description: "Vinhos, queijos, geleias e pães artesanais",
     price: "R$ 159,90",
+    priceNumber: 159.90,
     category: "cestas",
   },
   {
@@ -48,6 +54,7 @@ const products: Product[] = [
     name: "Cesta Bem-Estar",
     description: "Chás especiais, mel, granolas e chocolates",
     price: "R$ 139,90",
+    priceNumber: 139.90,
     category: "cestas",
   },
   {
@@ -55,6 +62,7 @@ const products: Product[] = [
     name: "Cesta Premium Gift",
     description: "Seleção especial para presentear com elegância",
     price: "R$ 299,90",
+    priceNumber: 299.90,
     category: "cestas",
   },
 ];
@@ -62,10 +70,20 @@ const products: Product[] = [
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const { addItem } = useCart();
 
   const filteredProducts = selectedCategory
     ? products.filter((p) => p.category === selectedCategory)
     : products;
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.priceNumber,
+      category: product.category,
+    });
+  };
 
   return (
     <section id="products" className="py-20 px-4">
@@ -151,13 +169,24 @@ const Products = () => {
               <CardContent>
                 <p className="text-2xl font-bold font-serif">{product.price}</p>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="gap-2">
                 <Button
-                  className={`w-full ${
+                  className={`flex-1 ${
                     product.category === "rolee"
                       ? "bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border border-rolee-golden"
                       : "bg-cestas-base hover:bg-cestas-base/90 text-cestas-sage border border-cestas-sage"
                   }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     window.open(
@@ -167,7 +196,7 @@ const Products = () => {
                   }}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  Pedir pelo WhatsApp
+                  WhatsApp
                 </Button>
               </CardFooter>
             </Card>
@@ -208,23 +237,37 @@ const Products = () => {
                     <p className="text-3xl font-bold font-serif">{selectedProduct.price}</p>
                   </div>
 
-                  <Button
-                    className={`w-full ${
-                      selectedProduct.category === "rolee"
-                        ? "bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border border-rolee-golden"
-                        : "bg-cestas-base hover:bg-cestas-base/90 text-cestas-sage border border-cestas-sage"
-                    }`}
-                    size="lg"
-                    onClick={() =>
-                      window.open(
-                        `https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o ${selectedProduct.name}`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    Pedir pelo WhatsApp
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      className={`flex-1 ${
+                        selectedProduct.category === "rolee"
+                          ? "bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border border-rolee-golden"
+                          : "bg-cestas-base hover:bg-cestas-base/90 text-cestas-sage border border-cestas-sage"
+                      }`}
+                      size="lg"
+                      onClick={() => {
+                        handleAddToCart(selectedProduct);
+                        setSelectedProduct(null);
+                      }}
+                    >
+                      <Plus className="mr-2 h-5 w-5" />
+                      Adicionar ao Carrinho
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                      onClick={() =>
+                        window.open(
+                          `https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o ${selectedProduct.name}`,
+                          "_blank"
+                        )
+                      }
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      Pedir pelo WhatsApp
+                    </Button>
+                  </div>
                 </div>
               </>
             )}

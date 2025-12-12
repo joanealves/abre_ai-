@@ -1,7 +1,11 @@
 import { Menu } from "lucide-react";
 import { Button } from "./ui/button";
+import Cart from "./Cart";
+import { useCart } from "../hooks/use-cart";
 
 const Navbar = () => {
+  const { items, updateQuantity, removeItem, checkout } = useCart();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="container mx-auto px-4 py-4">
@@ -20,14 +24,32 @@ const Navbar = () => {
             <a href="#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">
               Como Funciona
             </a>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
+            <Cart 
+              items={items}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeItem}
+              onCheckout={checkout}
+            />
+            <Button 
+              size="sm" 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => window.open("https://wa.me/5511999999999?text=Olá! Gostaria de falar com o atendimento", "_blank")}
+            >
               Fale Conosco
             </Button>
           </div>
 
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex md:hidden items-center gap-2">
+            <Cart 
+              items={items}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeItem}
+              onCheckout={checkout}
+            />
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

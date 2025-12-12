@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Wine, Candy, Cookie, Plus } from "lucide-react";
+import { Wine, Candy, Cookie, Plus, ShoppingCart } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
 
 type ComboCategory = "bebidas" | "chocolates" | "petiscos" | "todos";
 
@@ -10,80 +11,90 @@ interface ComboItem {
   name: string;
   description: string;
   price: string;
+  priceNumber: number;
   category: Exclude<ComboCategory, "todos">;
   icon: typeof Wine;
 }
 
 const comboItems: ComboItem[] = [
   {
-    id: 1,
+    id: 101,
     name: "Cerveja Artesanal IPA",
     description: "500ml - Amargor equilibrado",
     price: "R$ 15,90",
+    priceNumber: 15.90,
     category: "bebidas",
     icon: Wine,
   },
   {
-    id: 2,
+    id: 102,
     name: "Vinho Tinto Reserva",
     description: "750ml - Seleção especial",
     price: "R$ 49,90",
+    priceNumber: 49.90,
     category: "bebidas",
     icon: Wine,
   },
   {
-    id: 3,
+    id: 103,
     name: "Espumante Rosé",
     description: "750ml - Celebração perfeita",
     price: "R$ 39,90",
+    priceNumber: 39.90,
     category: "bebidas",
     icon: Wine,
   },
   {
-    id: 4,
+    id: 104,
     name: "Chocolate Belga 70%",
     description: "Barra premium 100g",
     price: "R$ 18,90",
+    priceNumber: 18.90,
     category: "chocolates",
     icon: Candy,
   },
   {
-    id: 5,
+    id: 105,
     name: "Trufas Sortidas",
     description: "Caixa com 12 unidades",
     price: "R$ 34,90",
+    priceNumber: 34.90,
     category: "chocolates",
     icon: Candy,
   },
   {
-    id: 6,
+    id: 106,
     name: "Bombons Gourmet",
     description: "Seleção especial 200g",
     price: "R$ 29,90",
+    priceNumber: 29.90,
     category: "chocolates",
     icon: Candy,
   },
   {
-    id: 7,
+    id: 107,
     name: "Mix de Castanhas Premium",
     description: "Seleção de 5 tipos - 250g",
     price: "R$ 24,90",
+    priceNumber: 24.90,
     category: "petiscos",
     icon: Cookie,
   },
   {
-    id: 8,
+    id: 108,
     name: "Tábua de Queijos Especiais",
     description: "3 tipos selecionados",
     price: "R$ 45,90",
+    priceNumber: 45.90,
     category: "petiscos",
     icon: Cookie,
   },
   {
-    id: 9,
+    id: 109,
     name: "Biscoitos Artesanais",
     description: "Mix de sabores - 200g",
     price: "R$ 19,90",
+    priceNumber: 19.90,
     category: "petiscos",
     icon: Cookie,
   },
@@ -91,6 +102,7 @@ const comboItems: ComboItem[] = [
 
 const AddToCombo = () => {
   const [selectedCategory, setSelectedCategory] = useState<ComboCategory>("todos");
+  const { addItem } = useCart();
 
   const filteredItems = selectedCategory === "todos"
     ? comboItems
@@ -116,6 +128,15 @@ const AddToCombo = () => {
       case "petiscos":
         return "bg-primary text-primary-foreground hover:bg-primary/90";
     }
+  };
+
+  const handleAddToCart = (item: ComboItem) => {
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.priceNumber,
+      category: item.category,
+    });
   };
 
   return (
@@ -199,9 +220,17 @@ const AddToCombo = () => {
                 <CardContent>
                   <p className="text-2xl font-bold font-serif">{item.price}</p>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="gap-2">
                   <Button
-                    className={`w-full ${getCategoryButtonColor(item.category)}`}
+                    className={`flex-1 ${getCategoryButtonColor(item.category)}`}
+                    onClick={() => handleAddToCart(item)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
                     onClick={() =>
                       window.open(
                         `https://wa.me/5511999999999?text=Olá! Gostaria de adicionar ${item.name} ao meu combo`,
@@ -209,8 +238,8 @@ const AddToCombo = () => {
                       )
                     }
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar ao Combo
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    WhatsApp
                   </Button>
                 </CardFooter>
               </Card>

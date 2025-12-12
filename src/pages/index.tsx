@@ -9,8 +9,8 @@ import Stats from "@/components/Stats";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import ContactForm from "@/components/ContactForm";
-// import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import ChatSupport from "@/components/Chatsupport ";
 
 const Index = () => {
   return (
@@ -27,9 +27,9 @@ const Index = () => {
         <Testimonials />
         <FAQ />
         <ContactForm />
-        {/* <Newsletter /> */}
       </main>
       <Footer />
+      <ChatSupport />
     </div>
   );
 };

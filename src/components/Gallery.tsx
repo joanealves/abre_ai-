@@ -1,4 +1,6 @@
 import { Beer, Gift } from "lucide-react";
+import roleeImg from "@/assets/rolee-hero.jpg";
+import cestasImg from "@/assets/cestas-hero.jpg";
 
 const Gallery = () => {
   return (
@@ -11,12 +13,13 @@ const Gallery = () => {
         <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {/* Rolê Card */}
           <div className="group relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 animate-fade-in-left">
-            <div className="aspect-square overflow-hidden bg-gradient-to-br from-rolee-dark to-rolee-gray">
-              <div className="w-full h-full flex items-center justify-center">
-                <Beer className="h-48 w-48 text-rolee-golden/20 group-hover:scale-110 transition-transform duration-700" />
-              </div>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-rolee-dark via-rolee-dark/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div
+              className="aspect-square overflow-hidden bg-cover bg-center"
+              style={{ backgroundImage: `url(${roleeImg})` }}
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-rolee-dark via-rolee-dark/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
             <div className="absolute bottom-0 left-0 right-0 p-8 text-rolee-cream">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-12 h-0.5 bg-rolee-golden" />
@@ -28,7 +31,7 @@ const Gallery = () => {
                 Kits de Rolê
               </h3>
               <p className="text-rolee-cream/80 font-outfit">
-                Cervejas artesanais, petiscos premium e aquele clima de boteco que 
+                Cervejas artesanais, petiscos premium e aquele clima de boteco que
                 só ABRE AÍ! traz pra sua casa.
               </p>
             </div>
@@ -36,12 +39,13 @@ const Gallery = () => {
 
           {/* Cestas Card */}
           <div className="group relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 animate-fade-in-right">
-            <div className="aspect-square overflow-hidden bg-gradient-to-br from-cestas-base to-cestas-beige">
-              <div className="w-full h-full flex items-center justify-center">
-                <Gift className="h-48 w-48 text-cestas-sage/20 group-hover:scale-110 transition-transform duration-700" />
-              </div>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-cestas-taupe via-cestas-taupe/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div
+              className="aspect-square overflow-hidden bg-cover bg-center"
+              style={{ backgroundImage: `url(${cestasImg})` }}
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-cestas-taupe via-cestas-taupe/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
             <div className="absolute bottom-0 left-0 right-0 p-8 text-cestas-base">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-12 h-0.5 bg-cestas-rose" />
@@ -53,7 +57,7 @@ const Gallery = () => {
                 Cestas & Presentes
               </h3>
               <p className="text-cestas-base/90 font-outfit">
-                Presentes elegantes e artesanais para surpreender com carinho 
+                Presentes elegantes e artesanais para surpreender com carinho
                 e sofisticação em qualquer ocasião.
               </p>
             </div>

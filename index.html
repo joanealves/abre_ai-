@@ -1,16 +1,136 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ABRE AÍ! | Cestas & Boteco Experience</title>
-    <meta name="description" content="O rolê começa em casa. Kits de bar e cestas premium para presentear ou curtir." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Primary Meta Tags -->
+  <title>ABRE AÍ! - Cestas & Boteco Experience | Kits Premium para Presentear</title>
+  <meta name="title" content="ABRE AÍ! - Cestas & Boteco Experience | Kits Premium" />
+  <meta name="description" content="Descubra kits de rolê com cervejas artesanais e cestas premium para presentear. Entrega rápida, produtos selecionados e experiências únicas. Peça já pelo WhatsApp!" />
+  <meta name="keywords" content="cerveja artesanal, kit de cerveja, cestas de presente, presente premium, boteco em casa, delivery de bebidas, cervejas especiais, gift box, presente corporativo, cesta gourmet, presente dia dos pais, presente aniversário" />
+  <meta name="author" content="ABRE AÍ!" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://abreai.com.br" />
+  
+  <!-- Geo Tags -->
+  <meta name="geo.region" content="BR-SP" />
+  <meta name="geo.placename" content="São Paulo" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://abreai.com.br/" />
+  <meta property="og:title" content="ABRE AÍ! - Cestas & Boteco Experience" />
+  <meta property="og:description" content="Kits de rolê com cervejas artesanais e cestas premium. O melhor presente começa aqui!" />
+  <meta property="og:image" content="https://abreai.com.br/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="ABRE AÍ!" />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://abreai.com.br/" />
+  <meta name="twitter:title" content="ABRE AÍ! - Cestas & Boteco Experience" />
+  <meta name="twitter:description" content="Kits de rolê com cervejas artesanais e cestas premium" />
+  <meta name="twitter:image" content="https://abreai.com.br/og-image.jpg" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  
+  <!-- Preconnect para melhor performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Structured Data - JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "ABRE AÍ!",
+    "description": "Kits de rolê com cervejas artesanais e cestas premium para presentear",
+    "url": "https://abreai.com.br",
+    "logo": "https://abreai.com.br/logo.png",
+    "image": "https://abreai.com.br/og-image.jpg",
+    "telephone": "+55-11-99999-9999",
+    "priceRange": "R$ 129 - R$ 299",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "BR",
+      "addressRegion": "SP"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "300",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      "opens": "09:00",
+      "closes": "22:00"
+    }
+  }
+  </script>
+  
+  <!-- Product Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Kit Boteco Clássico",
+    "description": "6 cervejas artesanais + petiscos selecionados",
+    "image": "https://abreai.com.br/produtos/kit-boteco-classico.jpg",
+    "brand": {
+      "@type": "Brand",
+      "name": "ABRE AÍ!"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": "https://abreai.com.br/#products",
+      "priceCurrency": "BRL",
+      "price": "129.90",
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "ABRE AÍ!"
+      }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "150"
+    }
+  }
+  </script>
+  
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://abreai.com.br"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Produtos",
+      "item": "https://abreai.com.br/#products"
+    }]
+  }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
