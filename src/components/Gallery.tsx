@@ -1,4 +1,4 @@
-import { Beer, Gift } from "lucide-react";
+// import { Beer, Gift } from "lucide-react";
 import roleeImg from "@/assets/rolee-hero.jpg";
 import cestasImg from "@/assets/cestas-hero.jpg";
 

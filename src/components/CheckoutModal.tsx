@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { ShoppingCart, Tag, Mail, Phone, MapPin, User, Percent } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useOrders } from "@/hooks/use-orders";
-import emailjs from "@emailjs/browser";
+// import emailjs from "@emailjs/browser";
 
 interface CheckoutModalProps {
   isOpen: boolean;

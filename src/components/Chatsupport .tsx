@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "./ui/sheet";
-import { MessageCircle, Send, User, Bot, Clock, Phone, Mail, Star, Package } from "lucide-react";
+import { MessageCircle, Send, User, Bot, Clock, Phone, Star, Package } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
@@ -32,9 +32,9 @@ const ChatSupportImproved = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [customerName, setCustomerName] = useState("");
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [, setShowFeedback] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { items, getItemCount } = useCart();
+  const { getItemCount } = useCart();
   const { favoritesCount } = useFavorites();
 
   const scrollToBottom = () => {

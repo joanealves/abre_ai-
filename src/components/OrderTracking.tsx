@@ -85,7 +85,7 @@ const progressMap: Record<OrderStatus, number> = {
 
 const OrderTracking = () => {
   const [trackingCode, setTrackingCode] = useState("");
-  const { getOrderByTrackingCode, orders } = useOrders();
+  const { getOrderByTrackingCode } = useOrders();
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
 
   const handleTrack = () => {
