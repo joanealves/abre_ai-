@@ -1,6 +1,8 @@
 import { Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import Cart from "./Cart";
+import Favorites from "./Favorites";
+import OrderTracking from "./OrderTracking";
 import { useCart } from "../hooks/use-cart";
 
 const Navbar = () => {
@@ -14,7 +16,7 @@ const Navbar = () => {
             <h1 className="text-2xl font-serif font-bold text-cestas-sage">ABRE AÍ!</h1>
           </div>
           
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-4">
             <a href="#sobre" className="text-sm font-medium hover:text-primary transition-colors">
               Sobre
             </a>
@@ -24,12 +26,21 @@ const Navbar = () => {
             <a href="#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">
               Como Funciona
             </a>
+            
+            {/* Novo: Botão de Rastreamento */}
+            <OrderTracking />
+            
+            {/* Novo: Botão de Favoritos */}
+            <Favorites />
+            
+            {/* Carrinho Melhorado */}
             <Cart 
               items={items}
               onUpdateQuantity={updateQuantity}
               onRemoveItem={removeItem}
               onCheckout={checkout}
             />
+            
             <Button 
               size="sm" 
               className="bg-primary hover:bg-primary/90"
@@ -40,6 +51,8 @@ const Navbar = () => {
           </div>
 
           <div className="flex md:hidden items-center gap-2">
+            <OrderTracking />
+            <Favorites />
             <Cart 
               items={items}
               onUpdateQuantity={updateQuantity}

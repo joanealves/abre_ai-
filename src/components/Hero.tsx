@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Beer, Gift } from "lucide-react";
 
+import roleeHero from "@/assets/rolee-hero.jpg";
+import cestasHero from "@/assets/cestas-hero.jpg";
+
 const Hero = () => {
   const [hoveredSide, setHoveredSide] = useState<"rolee" | "cestas" | null>(null);
 
@@ -12,11 +15,11 @@ const Hero = () => {
         {/* ROLEE */}
         <div
           className={`
-            relative transition-all duration-700
+            relative transition-all duration-700 ease-in-out
             ${hoveredSide === "rolee" ? "w-3/5" : hoveredSide === "cestas" ? "w-2/5" : "w-1/2"}
           `}
           style={{
-            backgroundImage: "url('/assets/rolee-hero.jpg')",
+            backgroundImage: `url(${roleeHero})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -27,11 +30,11 @@ const Hero = () => {
         {/* CESTAS */}
         <div
           className={`
-            relative transition-all duration-700
+            relative transition-all duration-700 ease-in-out
             ${hoveredSide === "cestas" ? "w-3/5" : hoveredSide === "rolee" ? "w-2/5" : "w-1/2"}
           `}
           style={{
-            backgroundImage: "url('/assets/cestas-hero.jpg')",
+            backgroundImage: `url(${cestasHero})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -42,22 +45,22 @@ const Hero = () => {
 
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <p className="text-sm md:text-base font-outfit tracking-widest uppercase mb-4 text-white mix-blend-difference animate-fade-in">
+        <p className="text-sm md:text-base font-outfit tracking-widest uppercase mb-4 text-white animate-fade-in">
           O rolê começa em casa
         </p>
 
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-4 text-white mix-blend-difference animate-fade-in">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-4 text-white animate-fade-in">
           ABRE AÍ!
         </h1>
 
-        <p className="text-lg md:text-xl font-outfit mb-12 text-white mix-blend-difference animate-fade-in">
+        <p className="text-lg md:text-xl font-outfit mb-12 text-white animate-fade-in">
           Cestas & Boteco Experience
         </p>
 
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
           <Button
             size="lg"
-            className="group bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border-2 border-rolee-golden hover:shadow-lg hover:shadow-rolee-golden/50 transition-all duration-300 hover:scale-105 text-lg px-8 py-6 animate-fade-in-left"
+            className="group bg-rolee-dark text-rolee-golden border-2 border-rolee-golden hover:shadow-lg hover:shadow-rolee-golden/40 transition-all hover:scale-105 px-8 py-6"
             onMouseEnter={() => setHoveredSide("rolee")}
             onMouseLeave={() => setHoveredSide(null)}
             onClick={() =>
@@ -66,13 +69,13 @@ const Hero = () => {
                 ?.scrollIntoView({ behavior: "smooth" })
             }
           >
-            <Beer className="mr-2 h-5 w-5 group-hover:animate-glow" />
+            <Beer className="mr-2 h-5 w-5" />
             Kits de Rolê
           </Button>
 
           <Button
             size="lg"
-            className="group bg-cestas-base hover:bg-cestas-base/90 text-cestas-sage border-2 border-cestas-sage hover:shadow-lg hover:shadow-cestas-sage/50 transition-all duration-300 hover:scale-105 text-lg px-8 py-6 animate-fade-in-right"
+            className="group bg-cestas-base text-cestas-sage border-2 border-cestas-sage hover:shadow-lg hover:shadow-cestas-sage/40 transition-all hover:scale-105 px-8 py-6"
             onMouseEnter={() => setHoveredSide("cestas")}
             onMouseLeave={() => setHoveredSide(null)}
             onClick={() =>
@@ -81,7 +84,7 @@ const Hero = () => {
                 ?.scrollIntoView({ behavior: "smooth" })
             }
           >
-            <Gift className="mr-2 h-5 w-5 group-hover:animate-glow" />
+            <Gift className="mr-2 h-5 w-5" />
             Cestas & Presentes
           </Button>
         </div>
