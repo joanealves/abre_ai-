@@ -17,13 +17,13 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <a href="#sobre" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#sobre" className="text-sm font-medium  text-white hover:text-primary transition-colors">
               Sobre
             </a>
-            <a href="#galeria" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#galeria" className="text-sm font-medium text-white hover:text-primary transition-colors">
               Galeria
             </a>
-            <a href="#como-funciona" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#como-funciona" className="text-sm font-medium text-white hover:text-primary transition-colors">
               Como Funciona
             </a>
             

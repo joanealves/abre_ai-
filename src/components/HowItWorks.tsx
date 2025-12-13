@@ -20,7 +20,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section id="como-funciona" className="py-24 px-4 bg-gradient-to-br from-cestas-base to-cestas-beige">
+    <section id="como-funciona" className="py-24 px-4 bg-gradient-to-br to-cestas-taupe">
       <div className="container mx-auto max-w-6xl">
         <h2 className="text-4xl md:text-5xl font-serif font-bold text-center mb-4 animate-fade-in">
           Como Funciona

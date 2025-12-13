@@ -8,29 +8,41 @@ import {
 const faqs = [
   {
     question: "Qual é a área de entrega?",
-    answer: "Entregamos em toda a região metropolitana. Entre em contato pelo WhatsApp para confirmar se atendemos seu endereço!",
+    answer:
+      "Realizamos entregas para todo o Brasil. Para Belo Horizonte e região metropolitana, o prazo padrão é de até 48 horas. Em casos de urgência, entre em contato pelo WhatsApp para verificar a disponibilidade de entrega expressa.",
   },
   {
     question: "Quanto tempo leva para receber meu kit?",
-    answer: "Normalmente entregamos em até 48 horas úteis após a confirmação do pedido. Para ocasiões especiais, podemos agendar a entrega no dia desejado.",
-  },
-  {
-    question: "Posso personalizar meu kit?",
-    answer: "Sim! Você pode escolher itens do nosso catálogo e criar um combo totalmente personalizado. Entre em contato conosco pelo WhatsApp para montar seu kit ideal.",
-  },
-  {
-    question: "Vocês aceitam encomendas para eventos?",
-    answer: "Sim! Atendemos eventos corporativos, aniversários, casamentos e outras celebrações. Entre em contato para fazer um orçamento personalizado.",
+    answer:
+      "O prazo de entrega varia de acordo com a localidade. Em Belo Horizonte e região metropolitana, entregamos em até 48 horas após a confirmação do pagamento. Para outras cidades e estados, o prazo é informado no momento do atendimento.",
   },
   {
     question: "Como funciona o pagamento?",
-    answer: "Aceitamos PIX, cartão de crédito e débito. O pagamento é feito no momento da confirmação do pedido pelo WhatsApp.",
+    answer:
+      "Após escolher seu kit ou personalização, enviamos um link de pagamento diretamente pelo WhatsApp. Assim que o pagamento é confirmado, o pedido é iniciado e seguimos com a preparação e envio.",
   },
   {
-    question: "Posso trocar produtos que não gostei?",
-    answer: "Sim! Se houver algum problema com os produtos, entre em contato em até 24 horas após o recebimento e faremos a troca.",
+    question: "Quais formas de pagamento vocês aceitam?",
+    answer:
+      "Aceitamos pagamento via PIX, cartão de crédito e cartão de débito, todos realizados através do link de pagamento enviado pelo WhatsApp.",
+  },
+  {
+    question: "Posso personalizar meu kit?",
+    answer:
+      "Sim! Você pode personalizar seu kit escolhendo itens do nosso catálogo. Basta entrar em contato pelo WhatsApp e nossa equipe ajuda a montar a opção ideal para você.",
+  },
+  {
+    question: "Vocês atendem encomendas para eventos?",
+    answer:
+      "Sim! Atendemos eventos corporativos, aniversários, casamentos e outras celebrações. Para grandes quantidades ou datas específicas, recomendamos entrar em contato com antecedência.",
+  },
+  {
+    question: "E se houver algum problema com o pedido?",
+    answer:
+      "Caso haja qualquer problema com o seu pedido, pedimos que entre em contato em até 24 horas após o recebimento para que possamos avaliar e realizar a troca, se necessário.",
   },
 ];
+
 
 const FAQ = () => {
   return (

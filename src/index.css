@@ -5,28 +5,45 @@
 
 
 @layer base {
-  :root {
-    --background: 29 17% 97%;
-    --foreground: 30 8% 25%;
-    --card: 29 17% 97%;
-    --card-foreground: 30 8% 25%;
-    --popover: 29 17% 97%;
-    --popover-foreground: 30 8% 25%;
-    --primary: 146 13% 49%;
-    --primary-foreground: 29 17% 97%;
-    --secondary: 15 31% 72%;
-    --secondary-foreground: 30 8% 25%;
-    --muted: 40 15% 82%;
-    --muted-foreground: 30 8% 45%;
-    --accent: 27 21% 52%;
-    --accent-foreground: 29 17% 97%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
-    --ring: 146 13% 49%;
-    --radius: 0.75rem;
-  }
+ :root {
+  /* Base neutra (cinza frio) */
+  --background: 210 20% 98%;
+  --foreground: 222 25% 15%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 25% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 25% 15%;
+
+  /* Verde (ok, já era bom) */
+  --primary: 146 13% 49%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary = rose LIMPO, sem marrom */
+  --secondary: 345 45% 85%;
+  --secondary-foreground: 222 25% 15%;
+
+  /* Muted neutro (cinza, não areia) */
+  --muted: 210 16% 93%;
+  --muted-foreground: 222 15% 40%;
+
+  /* Accent neutro (ACABA COM O MARROM) */
+  --accent: 210 16% 92%;
+  --accent-foreground: 222 25% 15%;
+
+  /* Bordas e inputs frios */
+  --border: 210 16% 88%;
+  --input: 210 16% 88%;
+
+  /* Ring continua verde */
+  --ring: 146 13% 49%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+
+  --radius: 0.75rem;
+}
 
   * {
     border-color: hsl(var(--border));
