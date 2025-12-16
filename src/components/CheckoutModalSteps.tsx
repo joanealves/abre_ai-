@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, Bot, User, X, Sparkles } from "lucide-react";
+import { MessageCircle, Send, Bot, User, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Card } from "./ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { Separator } from "./ui/separator";
+// import { Separator } from "./ui/separator";
 
 interface Message {
   id: number;

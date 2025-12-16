@@ -4,11 +4,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { ShoppingCart, Trash2, Plus, Minus, Heart } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import CheckoutModal from "./CheckoutModal";
+// import CheckoutModal from "./CheckoutModal";
 import { useFavorites } from "@/hooks/use-favorites";
 import type { CartItem } from "@/types/types";
 
-// Re-exportar para compatibilidade
 export type { CartItem };
 
 interface CartProps {
@@ -216,10 +215,10 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
         </SheetContent>
       </Sheet>
 
-      <CheckoutModal 
+      {/* <CheckoutModal 
         isOpen={isCheckoutOpen} 
         onClose={() => setIsCheckoutOpen(false)} 
-      />
+      /> */}
     </>
   );
 };

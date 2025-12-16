@@ -7,7 +7,7 @@ import {
 } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import { Package, Calendar, DollarSign, MapPin } from "lucide-react";
+import { Package, Calendar, MapPin } from "lucide-react";
 import { useOrders } from "@/hooks/use-orders";
 import type { OrderStatus } from "@/hooks/use-orders";
 import { useAuth } from "@/contexts/AuthContext";
