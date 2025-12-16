@@ -45,7 +45,7 @@ type DiscountCoupon = {
   freeShipping?: boolean;
 };
 
-type PaymentMethod = "pix" | "card" | "boleto";
+type PaymentMethod = "pix" | "card_link" | "mercado_pago";
 type DeliveryMethod = "standard" | "express" | "pickup";
 
 type CheckoutStep = 1 | 2 | 3 | 4;
@@ -208,8 +208,8 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
 
       const paymentMethodLabel: Record<PaymentMethod, string> = {
         pix: "PIX",
-        card: "Cartão de Crédito",
-        boleto: "Boleto Bancário"
+        card_link: "Cartão de Crédito (Link de Pagamento)",
+        mercado_pago: "Mercado Pago"
       };
 
       const whatsappMessage = `
@@ -290,8 +290,8 @@ Confirme este pedido para prosseguir! ✅
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-        <div className="flex flex-col h-full">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col">
+        <div className="flex flex-col max-h-[90vh]">
           {/* Header */}
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle className="flex items-center gap-2">
@@ -349,7 +349,7 @@ Confirme este pedido para prosseguir! ✅
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
             {currentStep === 1 && <Step1Cart items={items} />}
             {currentStep === 2 && (
               <Step2Delivery
@@ -388,7 +388,7 @@ Confirme este pedido para prosseguir! ✅
           </div>
 
           {/* Footer with Navigation */}
-          <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="px-6 py-4 border-t bg-muted/50 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 {currentStep > 1 && (
@@ -636,6 +636,21 @@ const Step2Delivery = ({
           ))}
         </RadioGroup>
       </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <Package className="h-5 w-5" />
+          Observações (Opcional)
+        </h3>
+        <Textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="Alguma observação sobre o pedido? Ex: preferência de horário de entrega, instruções especiais..."
+          rows={3}
+        />
+      </div>
     </div>
   );
 };
@@ -657,39 +672,106 @@ const Step3Payment = ({
           Forma de Pagamento
         </h3>
         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+          {/* PIX - Método Principal */}
+          <div className="flex items-center space-x-3 p-4 border-2 border-primary/50 rounded-lg hover:bg-muted/50 cursor-pointer bg-primary/5">
             <RadioGroupItem value="pix" id="pix" />
             <Label htmlFor="pix" className="flex-1 cursor-pointer">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">PIX</p>
-                  <p className="text-sm text-muted-foreground">Aprovação instantânea</p>
+                  <p className="font-medium flex items-center gap-2">
+                    PIX
+                    <Badge variant="default" className="bg-primary">
+                      Recomendado
+                    </Badge>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Aprovação instantânea • Pagamento via QR Code
+                  </p>
                 </div>
-                <Badge variant="secondary">Recomendado</Badge>
               </div>
             </Label>
           </div>
 
+          {/* Cartão Online via Link */}
           <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
-            <RadioGroupItem value="card" id="card" />
-            <Label htmlFor="card" className="flex-1 cursor-pointer">
+            <RadioGroupItem value="card_link" id="card_link" />
+            <Label htmlFor="card_link" className="flex-1 cursor-pointer">
               <div>
-                <p className="font-medium">Cartão de Crédito</p>
-                <p className="text-sm text-muted-foreground">Parcele em até 3x sem juros</p>
+                <p className="font-medium">Cartão de Crédito (Link de Pagamento)</p>
+                <p className="text-sm text-muted-foreground">
+                  Receba um link seguro para pagar com cartão
+                </p>
               </div>
             </Label>
           </div>
 
+          {/* Mercado Pago */}
           <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
-            <RadioGroupItem value="boleto" id="boleto" />
-            <Label htmlFor="boleto" className="flex-1 cursor-pointer">
+            <RadioGroupItem value="mercado_pago" id="mercado_pago" />
+            <Label htmlFor="mercado_pago" className="flex-1 cursor-pointer">
               <div>
-                <p className="font-medium">Boleto Bancário</p>
-                <p className="text-sm text-muted-foreground">Vencimento em 3 dias úteis</p>
+                <p className="font-medium">Mercado Pago</p>
+                <p className="text-sm text-muted-foreground">
+                  PIX, Cartão ou Saldo Mercado Pago
+                </p>
               </div>
             </Label>
           </div>
         </RadioGroup>
+
+        {/* Informação adicional baseada no método selecionado */}
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          {paymentMethod === "pix" && (
+            <div className="flex items-start gap-2">
+              <div className="bg-primary rounded-full p-1 mt-0.5">
+                <Check className="h-3 w-3 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Como funciona o PIX:</p>
+                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                  <li>• Você receberá o código PIX via WhatsApp</li>
+                  <li>• Copie e cole no app do seu banco</li>
+                  <li>• Pagamento confirmado na hora</li>
+                  <li>• Seu pedido será processado imediatamente</li>
+                </ul>
+              </div>
+            </div>
+          )}
+          
+          {paymentMethod === "card_link" && (
+            <div className="flex items-start gap-2">
+              <div className="bg-blue-500 rounded-full p-1 mt-0.5">
+                <CreditCard className="h-3 w-3 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Como funciona o Link de Pagamento:</p>
+                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                  <li>• Você receberá um link seguro via WhatsApp</li>
+                  <li>• Clique no link e insira os dados do cartão</li>
+                  <li>• Parcele em até 3x sem juros</li>
+                  <li>• Confirmação em até 2 minutos</li>
+                </ul>
+              </div>
+            </div>
+          )}
+          
+          {paymentMethod === "mercado_pago" && (
+            <div className="flex items-start gap-2">
+              <div className="bg-[#00AAFF] rounded-full p-1 mt-0.5">
+                <CreditCard className="h-3 w-3 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Como funciona o Mercado Pago:</p>
+                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                  <li>• Você receberá um link do Mercado Pago via WhatsApp</li>
+                  <li>• Escolha entre PIX, Cartão ou Saldo MP</li>
+                  <li>• Parcele em até 12x no cartão</li>
+                  <li>• Ambiente seguro e confiável</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <Separator />
@@ -744,8 +826,14 @@ const Step4Summary = ({
 }: Step4SummaryProps) => {
   const paymentMethodLabel: Record<PaymentMethod, string> = {
     pix: "PIX",
-    card: "Cartão de Crédito",
-    boleto: "Boleto Bancário"
+    card_link: "Cartão de Crédito (Link)",
+    mercado_pago: "Mercado Pago"
+  };
+
+  const paymentMethodDescription: Record<PaymentMethod, string> = {
+    pix: "Você receberá o código PIX via WhatsApp",
+    card_link: "Você receberá um link de pagamento via WhatsApp",
+    mercado_pago: "Você receberá um link do Mercado Pago via WhatsApp"
   };
 
   return (
@@ -793,7 +881,12 @@ const Step4Summary = ({
         {/* Payment */}
         <div className="space-y-2 mb-4">
           <p className="font-medium text-sm">Pagamento:</p>
-          <p className="text-sm text-muted-foreground">{paymentMethodLabel[paymentMethod]}</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            {paymentMethodLabel[paymentMethod]}
+          </p>
+          <p className="text-xs text-muted-foreground italic">
+            {paymentMethodDescription[paymentMethod]}
+          </p>
         </div>
 
         <Separator className="my-4" />
@@ -824,10 +917,18 @@ const Step4Summary = ({
         </div>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-900">
-          ℹ️ Ao clicar em "Finalizar Pedido", você será redirecionado para o WhatsApp para confirmar seu pedido.
+      {/* Aviso importante */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+        <p className="text-sm font-medium text-blue-900 flex items-center gap-2">
+          <Check className="h-4 w-4" />
+          Próximos passos:
         </p>
+        <ul className="text-xs text-blue-800 space-y-1 ml-6 list-disc">
+          <li>Você será redirecionado para o WhatsApp</li>
+          <li>Confirme seu pedido com nossa equipe</li>
+          <li>Receberá as instruções de pagamento</li>
+          <li>Após confirmação, seu pedido será processado</li>
+        </ul>
       </div>
     </div>
   );
