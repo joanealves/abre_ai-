@@ -12,11 +12,13 @@ import { User, LogOut, Package, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "./AuthModal";
 import UserOrdersModal from "./UserOrdersModal";
+import UserSettingsModal from "./UserSettingsModal";
 
 const UserProfile = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   if (!isAuthenticated) {
     return (
@@ -53,7 +55,7 @@ const UserProfile = () => {
             <Package className="mr-2 h-4 w-4" />
             Meus Pedidos
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             Configurações
           </DropdownMenuItem>
@@ -68,6 +70,11 @@ const UserProfile = () => {
       <UserOrdersModal
         isOpen={isOrdersModalOpen}
         onClose={() => setIsOrdersModalOpen(false)}
+      />
+      
+      <UserSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
       />
     </>
   );
