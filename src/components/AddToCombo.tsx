@@ -1,9 +1,11 @@
-
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Wine, Candy, Cookie, Plus, ShoppingCart } from "lucide-react";
+import { Wine, Candy, Cookie, Plus, ShoppingCart, Minus, Heart } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { useFavorites } from "@/hooks/use-favorites";
+import { Badge } from "./ui/badge";
+import type { ProductCategory } from "@/types/types";
 
 type ComboCategory = "bebidas" | "chocolates" | "petiscos" | "todos";
 
@@ -13,7 +15,7 @@ interface ComboItem {
   description: string;
   price: string;
   priceNumber: number;
-  category: Exclude<ComboCategory, "todos">;
+  category: Extract<ProductCategory, "bebidas" | "chocolates" | "petiscos">;
   icon: typeof Wine;
 }
 
@@ -103,13 +105,52 @@ const comboItems: ComboItem[] = [
 
 const AddToCombo = () => {
   const [selectedCategory, setSelectedCategory] = useState<ComboCategory>("todos");
-  const { addItem } = useCart();
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  
+  const { addItem, items: cartItems } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const filteredItems = selectedCategory === "todos"
     ? comboItems
     : comboItems.filter((item) => item.category === selectedCategory);
 
-  const getCategoryColor = (category: Exclude<ComboCategory, "todos">) => {
+  const getCartQuantity = (itemId: number) => {
+    const cartItem = cartItems.find(item => item.id === itemId);
+    return cartItem?.quantity || 0;
+  };
+
+  const getLocalQuantity = (itemId: number) => {
+    return quantities[itemId] || 0;
+  };
+
+  const updateLocalQuantity = (itemId: number, delta: number) => {
+    setQuantities(prev => {
+      const current = prev[itemId] || 0;
+      const newValue = Math.max(0, current + delta);
+      return { ...prev, [itemId]: newValue };
+    });
+  };
+
+  const handleAddToCart = (item: ComboItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const quantity = getLocalQuantity(item.id);
+    
+    // Só adiciona se quantidade for maior que 0
+    if (quantity === 0) return;
+    
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.priceNumber,
+      category: item.category,
+      description: item.description,
+    }, quantity);
+    
+    // Reset local quantity after adding
+    setQuantities(prev => ({ ...prev, [item.id]: 0 }));
+  };
+
+  const getCategoryColor = (category: Extract<ProductCategory, "bebidas" | "chocolates" | "petiscos">) => {
     switch (category) {
       case "bebidas":
         return "text-rolee-golden border-rolee-golden/20 hover:border-rolee-golden";
@@ -120,7 +161,7 @@ const AddToCombo = () => {
     }
   };
 
-  const getCategoryButtonColor = (category: Exclude<ComboCategory, "todos">) => {
+  const getCategoryButtonColor = (category: Extract<ProductCategory, "bebidas" | "chocolates" | "petiscos">) => {
     switch (category) {
       case "bebidas":
         return "bg-rolee-dark text-rolee-golden border-rolee-golden hover:bg-rolee-dark/90";
@@ -129,15 +170,6 @@ const AddToCombo = () => {
       case "petiscos":
         return "bg-primary text-primary-foreground hover:bg-primary/90";
     }
-  };
-
-  const handleAddToCart = (item: ComboItem) => {
-    addItem({
-      id: item.id,
-      name: item.name,
-      price: item.priceNumber,
-      category: item.category,
-    });
   };
 
   return (
@@ -205,15 +237,51 @@ const AddToCombo = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item, index) => {
             const Icon = item.icon;
+            const cartQty = getCartQuantity(item.id);
+            const localQty = getLocalQuantity(item.id);
+            
             return (
               <Card
                 key={item.id}
-                className={`overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in ${getCategoryColor(item.category)}`}
+                className={`overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fade-in relative ${getCategoryColor(item.category)}`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
+                {/* Badge de quantidade no carrinho */}
+                {cartQty > 0 && (
+                  <Badge 
+                    className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground"
+                  >
+                    {cartQty} no carrinho
+                  </Badge>
+                )}
+                
+                {/* Botão de favorito */}
+                <button
+                  className="absolute top-3 left-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite({
+                      id: item.id,
+                      name: item.name,
+                      price: item.priceNumber,
+                      category: item.category,
+                      description: item.description,
+                    });
+                  }}
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      isFavorite(item.id)
+                        ? "fill-red-500 text-red-500"
+                        : "text-gray-600"
+                    }`}
+                  />
+                </button>
+
                 <div className="h-32 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
                   <Icon className="h-16 w-16 opacity-20" />
                 </div>
+                
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Icon className="h-5 w-5" />
@@ -221,30 +289,81 @@ const AddToCombo = () => {
                   </CardTitle>
                   <CardDescription>{item.description}</CardDescription>
                 </CardHeader>
+                
                 <CardContent>
                   <p className="text-2xl font-bold font-serif">{item.price}</p>
                 </CardContent>
-                <CardFooter className="gap-2">
-                  <Button
-                    className={`flex-1 ${getCategoryButtonColor(item.category)}`}
-                    onClick={() => handleAddToCart(item)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() =>
-                      window.open(
-                        `https://wa.me/5511999999999?text=Olá! Gostaria de adicionar ${item.name} ao meu combo`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </Button>
+                
+                <CardFooter className="flex-col gap-3">
+                  {/* Contador de quantidade */}
+                  {localQty === 0 ? (
+                    // Quando quantidade é 0, mostra apenas botão +
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateLocalQuantity(item.id, 1);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Selecionar quantidade
+                    </Button>
+                  ) : (
+                    // Quando tem quantidade, mostra contador completo
+                    <div className="flex items-center justify-center gap-3 w-full">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateLocalQuantity(item.id, -1);
+                        }}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="text-lg font-semibold min-w-[3ch] text-center">
+                        {localQty}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateLocalQuantity(item.id, 1);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Botões de ação */}
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className={`flex-1 ${getCategoryButtonColor(item.category)}`}
+                      onClick={(e) => handleAddToCart(item, e)}
+                      disabled={localQty === 0}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar {localQty > 0 && `(${localQty})`}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() =>
+                        window.open(
+                          `https://wa.me/5511999999999?text=Olá! Gostaria de adicionar ${item.name} ao meu combo`,
+                          "_blank"
+                        )
+                      }
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             );

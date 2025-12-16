@@ -1,10 +1,15 @@
 import { useState } from "react";
+import type { ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Beer, Gift, ShoppingCart, Plus, Coffee, Heart, Dumbbell, Leaf, Flame } from "lucide-react";
+import { Beer, Gift, ShoppingCart, Plus, Coffee, Heart, Dumbbell, Leaf, Flame, Minus } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { useFavorites } from "@/hooks/use-favorites";
+import { Badge } from "@/components/ui/badge";
+import type { ProductCategory } from "@/types/types";
 
-type Category = "rolee" | "cestas" | "cafe" | "namorados" | "fit" | "vegan" | "churrasco";
+type Category = ProductCategory;
 
 interface Product {
   id: number;
@@ -149,13 +154,53 @@ const products: Product[] = [
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  
+  const { addItem, items: cartItems } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const filteredProducts = selectedCategory
     ? products.filter((p) => p.category === selectedCategory)
     : products;
 
+  const getCartQuantity = (productId: number) => {
+    const cartItem = cartItems.find(item => item.id === productId);
+    return cartItem?.quantity || 0;
+  };
+
+  const getLocalQuantity = (productId: number) => {
+    return quantities[productId] || 0;
+  };
+
+  const updateLocalQuantity = (productId: number, delta: number) => {
+    setQuantities(prev => {
+      const current = prev[productId] || 0;
+      const newValue = Math.max(0, current + delta);
+      return { ...prev, [productId]: newValue };
+    });
+  };
+
+  const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const quantity = getLocalQuantity(product.id);
+    
+    // Só adiciona se quantidade for maior que 0
+    if (quantity === 0) return;
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.priceNumber,
+      category: product.category,
+      description: product.description,
+    }, quantity);
+    
+    // Reset local quantity after adding
+    setQuantities(prev => ({ ...prev, [product.id]: 0 }));
+  };
+
   const getCategoryIcon = (category: Category, className = "h-5 w-5") => {
-    const icons = {
+    const icons: Record<Category, ReactElement> = {
       rolee: <Beer className={className} />,
       cestas: <Gift className={className} />,
       cafe: <Coffee className={className} />,
@@ -163,12 +208,21 @@ const Products = () => {
       fit: <Dumbbell className={className} />,
       vegan: <Leaf className={className} />,
       churrasco: <Flame className={className} />,
+      bebidas: <Beer className={className} />,
+      chocolates: <Gift className={className} />,
+      petiscos: <Coffee className={className} />,
     };
     return icons[category];
   };
 
   const getCategoryColors = (category: Category) => {
-    const colors = {
+    const colors: Record<Category, {
+      border: string;
+      icon: string;
+      iconBg: string;
+      button: string;
+      buttonActive: string;
+    }> = {
       rolee: {
         border: "border-rolee-golden/20 hover:border-rolee-golden",
         icon: "text-rolee-golden",
@@ -217,13 +271,34 @@ const Products = () => {
         iconBg: "text-rolee-golden/30",
         button: "bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border border-rolee-golden",
         buttonActive: "bg-rolee-dark text-rolee-golden border-rolee-golden"
+      },
+      bebidas: {
+        border: "border-rolee-golden/20 hover:border-rolee-golden",
+        icon: "text-rolee-golden",
+        iconBg: "text-rolee-golden/30",
+        button: "bg-rolee-dark hover:bg-rolee-dark/90 text-rolee-golden border border-rolee-golden",
+        buttonActive: "bg-rolee-dark text-rolee-golden border-rolee-golden"
+      },
+      chocolates: {
+        border: "border-cestas-sage/20 hover:border-cestas-sage",
+        icon: "text-cestas-sage",
+        iconBg: "text-cestas-sage/30",
+        button: "bg-cestas-sage hover:bg-cestas-sage/90 text-white border border-cestas-sage",
+        buttonActive: "bg-cestas-sage text-white border-cestas-sage"
+      },
+      petiscos: {
+        border: "border-primary/20 hover:border-primary",
+        icon: "text-primary",
+        iconBg: "text-primary/30",
+        button: "bg-primary hover:bg-primary/90 text-primary-foreground border border-primary",
+        buttonActive: "bg-primary text-primary-foreground border-primary"
       }
     };
     return colors[category];
   };
 
   return (
-    <section id="products" className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+    <section id="produtos" className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -309,14 +384,49 @@ const Products = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product, index) => {
+          {filteredProducts.map((product) => {
             const colors = getCategoryColors(product.category);
+            const cartQty = getCartQuantity(product.id);
+            const localQty = getLocalQuantity(product.id);
+            
             return (
               <Card
                 key={product.id}
-                className={`overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 ${colors.border}`}
+                className={`overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 ${colors.border} relative`}
                 onClick={() => setSelectedProduct(product)}
               >
+                {/* Badge de quantidade no carrinho */}
+                {cartQty > 0 && (
+                  <Badge 
+                    className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground"
+                  >
+                    {cartQty} no carrinho
+                  </Badge>
+                )}
+                
+                {/* Botão de favorito */}
+                <button
+                  className="absolute top-3 left-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite({
+                      id: product.id,
+                      name: product.name,
+                      price: product.priceNumber,
+                      category: product.category,
+                      description: product.description,
+                    });
+                  }}
+                >
+                  <Heart
+                    className={`h-5 w-5 ${
+                      isFavorite(product.id)
+                        ? "fill-red-500 text-red-500"
+                        : "text-gray-600"
+                    }`}
+                  />
+                </button>
+
                 <div className="aspect-video overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                   <div className="w-full h-full flex items-center justify-center">
                     <div className={colors.iconBg}>
@@ -324,6 +434,7 @@ const Products = () => {
                     </div>
                   </div>
                 </div>
+                
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className={colors.icon}>
@@ -333,40 +444,89 @@ const Products = () => {
                   </CardTitle>
                   <CardDescription>{product.description}</CardDescription>
                 </CardHeader>
+                
                 <CardContent>
                   <p className="text-2xl font-bold">{product.price}</p>
                 </CardContent>
-                <CardFooter className="gap-2">
-                  <Button
-                    className={`flex-1 ${colors.button}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(`${product.name} adicionado ao carrinho!`);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(
-                        `https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o ${product.name}`,
-                        "_blank"
-                      );
-                    }}
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </Button>
+                
+                <CardFooter className="flex-col gap-3">
+                  {/* Contador de quantidade */}
+                  {localQty === 0 ? (
+                    // Quando quantidade é 0, mostra apenas botão +
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateLocalQuantity(product.id, 1);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Selecionar quantidade
+                    </Button>
+                  ) : (
+                    // Quando tem quantidade, mostra contador completo
+                    <div className="flex items-center justify-center gap-3 w-full">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateLocalQuantity(product.id, -1);
+                        }}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="text-lg font-semibold min-w-[3ch] text-center">
+                        {localQty}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateLocalQuantity(product.id, 1);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Botões de ação */}
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className={`flex-1 ${colors.button}`}
+                      onClick={(e) => handleAddToCart(product, e)}
+                      disabled={localQty === 0}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar {localQty > 0 && `(${localQty})`}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(
+                          `https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o ${product.name}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             );
           })}
         </div>
 
+        {/* Modal de detalhes do produto */}
         <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
           <DialogContent className="max-w-2xl">
             {selectedProduct && (
@@ -384,7 +544,15 @@ const Products = () => {
                 </DialogHeader>
                 
                 <div className="space-y-4">
-                  <div className="aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
+                  <div className="aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50 relative">
+                    {/* Badge no modal também */}
+                    {getCartQuantity(selectedProduct.id) > 0 && (
+                      <Badge 
+                        className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground"
+                      >
+                        {getCartQuantity(selectedProduct.id)} no carrinho
+                      </Badge>
+                    )}
                     <div className="w-full h-full flex items-center justify-center">
                       <div className={getCategoryColors(selectedProduct.category).iconBg}>
                         {getCategoryIcon(selectedProduct.category, "h-32 w-32")}
@@ -397,12 +565,35 @@ const Products = () => {
                     <p className="text-3xl font-bold">{selectedProduct.price}</p>
                   </div>
 
+                  {/* Contador no modal */}
+                  <div className="flex items-center justify-center gap-4 py-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10"
+                      onClick={() => updateLocalQuantity(selectedProduct.id, -1)}
+                    >
+                      <Minus className="h-5 w-5" />
+                    </Button>
+                    <span className="text-2xl font-semibold min-w-[4ch] text-center">
+                      {getLocalQuantity(selectedProduct.id)}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10"
+                      onClick={() => updateLocalQuantity(selectedProduct.id, 1)}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
+
                   <div className="flex gap-2">
                     <Button
                       className={`flex-1 ${getCategoryColors(selectedProduct.category).button}`}
                       size="lg"
                       onClick={() => {
-                        alert(`${selectedProduct.name} adicionado ao carrinho!`);
+                        handleAddToCart(selectedProduct);
                         setSelectedProduct(null);
                       }}
                     >

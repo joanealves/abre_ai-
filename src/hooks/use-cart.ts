@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import type { CartItem } from "@/components/Cart";
+import type { CartItem } from "@/types/types";
 
 const CART_STORAGE_KEY = "abreai_cart";
 

@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-
-export interface FavoriteItem {
-  id: number;
-  name: string;
-  price: number;
-  category: "rolee" | "cestas" | "bebidas" | "chocolates" | "petiscos";
-  description: string;
-}
+import type { FavoriteItem } from "@/types/types";
 
 const FAVORITES_STORAGE_KEY = "abreai_favorites";
 

@@ -6,16 +6,10 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import CheckoutModal from "./CheckoutModal";
 import { useFavorites } from "@/hooks/use-favorites";
+import type { CartItem } from "@/types/types";
 
-export interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  category: "rolee" | "cestas" | "bebidas" | "chocolates" | "petiscos";
-  image?: string;
-  description?: string;
-}
+// Re-exportar para compatibilidade
+export type { CartItem };
 
 interface CartProps {
   items: CartItem[];
@@ -43,13 +37,19 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
     switch (category) {
       case "rolee":
       case "bebidas":
+      case "cafe":
+      case "churrasco":
         return "bg-rolee-dark text-rolee-golden";
       case "cestas":
+      case "fit":
+      case "vegan":
         return "bg-cestas-base text-cestas-sage";
       case "chocolates":
         return "bg-cestas-sage text-white";
       case "petiscos":
         return "bg-primary text-primary-foreground";
+      case "namorados":
+        return "bg-cestas-rose text-white";
       default:
         return "bg-muted text-muted-foreground";
     }
