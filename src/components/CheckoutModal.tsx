@@ -12,8 +12,24 @@ import {
 } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { toast } from "sonner";
-import { ShoppingCart, Tag, Mail, Phone, MapPin, User as UserIcon, Percent } from "lucide-react";
+import { 
+  ShoppingCart, 
+  Tag, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  User as UserIcon, 
+  Percent,
+  CreditCard,
+  Check,
+  ArrowLeft,
+  ArrowRight,
+  Package,
+  Truck,
+  Clock
+} from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/hooks/use-orders";
@@ -29,6 +45,19 @@ type DiscountCoupon = {
   freeShipping?: boolean;
 };
 
+type PaymentMethod = "pix" | "card" | "boleto";
+type DeliveryMethod = "standard" | "express" | "pickup";
+
+type CheckoutStep = 1 | 2 | 3 | 4;
+
+type DeliveryOptions = {
+  [K in DeliveryMethod]: {
+    label: string;
+    price: number;
+    days: string;
+  };
+};
+
 // Cupons de desconto disponíveis
 const DISCOUNT_COUPONS: Record<string, DiscountCoupon> = {
   PRIMEIRA: { discount: 10, label: "10% OFF - Primeira Compra" },
@@ -38,10 +67,18 @@ const DISCOUNT_COUPONS: Record<string, DiscountCoupon> = {
   FRETEGRATIS: { discount: 0, label: "Frete Grátis", freeShipping: true },
 };
 
+const DELIVERY_OPTIONS: DeliveryOptions = {
+  standard: { label: "Padrão", price: 15, days: "5-7 dias úteis" },
+  express: { label: "Express", price: 35, days: "2-3 dias úteis" },
+  pickup: { label: "Retirada", price: 0, days: "Disponível amanhã" },
+};
+
 const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
   const { createOrder } = useOrders();
+  
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -51,6 +88,11 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
     address: "",
     notes: "",
   });
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<keyof typeof DISCOUNT_COUPONS | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("standard");
 
   // Preencher dados do usuário automaticamente se estiver logado
   useEffect(() => {
@@ -65,13 +107,32 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
     }
   }, [isAuthenticated, user]);
 
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<keyof typeof DISCOUNT_COUPONS | null>(null);
+  // Reset ao fechar
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentStep(1);
+      if (!isAuthenticated) {
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          notes: "",
+        });
+      }
+      setCouponCode("");
+      setAppliedCoupon(null);
+      setPaymentMethod("pix");
+      setDeliveryMethod("standard");
+    }
+  }, [isOpen, isAuthenticated]);
 
   const subtotal = getTotalPrice();
-  const shipping = appliedCoupon && DISCOUNT_COUPONS[appliedCoupon]?.freeShipping ? 0 : 15;
+  const deliveryPrice = appliedCoupon && DISCOUNT_COUPONS[appliedCoupon]?.freeShipping 
+    ? 0 
+    : DELIVERY_OPTIONS[deliveryMethod].price;
   const discount = appliedCoupon ? (subtotal * DISCOUNT_COUPONS[appliedCoupon].discount) / 100 : 0;
-  const total = subtotal + shipping - discount;
+  const total = subtotal + deliveryPrice - discount;
 
   const handleApplyCoupon = () => {
     const upperCoupon = couponCode.toUpperCase() as keyof typeof DISCOUNT_COUPONS;
@@ -92,14 +153,36 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
     toast.info("Cupom removido");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1:
+        return items.length > 0;
+      case 2:
+        return formData.name && formData.email && formData.phone && formData.address;
+      case 3:
+        return true;
+      case 4:
+        return true;
+      default:
+        return false;
     }
+  };
 
+  const handleNextStep = () => {
+    if (canProceedToNextStep()) {
+      setCurrentStep((prev) => Math.min(4, prev + 1) as CheckoutStep);
+    } else {
+      if (currentStep === 2) {
+        toast.error("Preencha todos os campos obrigatórios");
+      }
+    }
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep((prev) => Math.max(1, prev - 1) as CheckoutStep);
+  };
+
+  const handleSubmit = async () => {
     setIsProcessing(true);
 
     try {
@@ -123,6 +206,12 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
         .map((item) => `• ${item.name} (${item.quantity}x) - R$ ${(item.price * item.quantity).toFixed(2)}`)
         .join("\n");
 
+      const paymentMethodLabel: Record<PaymentMethod, string> = {
+        pix: "PIX",
+        card: "Cartão de Crédito",
+        boleto: "Boleto Bancário"
+      };
+
       const whatsappMessage = `
 *🎉 NOVO PEDIDO - ABRE AÍ!*
 
@@ -142,9 +231,12 @@ ${itemsList}
 
 *Resumo do Pedido:*
 Subtotal: R$ ${subtotal.toFixed(2)}
-Frete: R$ ${shipping.toFixed(2)}
+Entrega (${DELIVERY_OPTIONS[deliveryMethod].label}): R$ ${deliveryPrice.toFixed(2)}
 ${appliedCoupon ? `Desconto (${DISCOUNT_COUPONS[appliedCoupon].label}): -R$ ${discount.toFixed(2)}` : ""}
 *TOTAL: R$ ${total.toFixed(2)}*
+
+*Forma de Pagamento:* ${paymentMethodLabel[paymentMethod]}
+*Prazo de Entrega:* ${DELIVERY_OPTIONS[deliveryMethod].days}
 
 ${formData.notes ? `*Observações:*\n${formData.notes}` : ""}
 
@@ -164,7 +256,7 @@ Confirme este pedido para prosseguir! ✅
           duration: 5000,
         });
 
-        // Resetar notas (manter outros dados se estiver logado)
+        // Resetar formulário
         if (!isAuthenticated) {
           setFormData({
             name: "",
@@ -178,6 +270,7 @@ Confirme este pedido para prosseguir! ✅
         }
         setAppliedCoupon(null);
         setCouponCode("");
+        setCurrentStep(1);
       }, 500);
 
     } catch (error) {
@@ -188,193 +281,555 @@ Confirme este pedido para prosseguir! ✅
     }
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Finalizar Pedido
-          </DialogTitle>
-          <DialogDescription>
-            {isAuthenticated 
-              ? "Seus dados já estão preenchidos. Revise e confirme o pedido."
-              : "Preencha seus dados para concluir a compra"}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Finalizar Pedido
+            </DialogTitle>
+            <DialogDescription>
+              {isAuthenticated 
+                ? "Revise seus dados e finalize seu pedido"
+                : "Preencha seus dados para finalizar"}
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Dados Pessoais */}
-          <div className="space-y-4">
-            <h3 className="font-semibold flex items-center gap-2">
-              <UserIcon className="h-4 w-4" />
-              Dados Pessoais
-            </h3>
-            <div className="grid gap-4">
+          {/* Progress Steps */}
+          <div className="px-6 py-4 bg-muted/50">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {[
+                { num: 1, label: "Carrinho", icon: ShoppingCart },
+                { num: 2, label: "Entrega", icon: Truck },
+                { num: 3, label: "Pagamento", icon: CreditCard },
+                { num: 4, label: "Resumo", icon: Check }
+              ].map((step, index) => (
+                <div key={step.num} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center
+                      ${currentStep >= step.num 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'}
+                      transition-colors
+                    `}>
+                      {currentStep > step.num ? (
+                        <Check className="h-5 w-5" />
+                      ) : (
+                        <step.icon className="h-5 w-5" />
+                      )}
+                    </div>
+                    <span className={`
+                      text-xs mt-2 font-medium
+                      ${currentStep >= step.num ? 'text-foreground' : 'text-muted-foreground'}
+                    `}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < 3 && (
+                    <div className={`
+                      h-[2px] flex-1 mx-2
+                      ${currentStep > step.num ? 'bg-primary' : 'bg-muted'}
+                      transition-colors
+                    `} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            {currentStep === 1 && <Step1Cart items={items} />}
+            {currentStep === 2 && (
+              <Step2Delivery
+                formData={formData}
+                setFormData={setFormData}
+                deliveryMethod={deliveryMethod}
+                setDeliveryMethod={setDeliveryMethod}
+                isAuthenticated={isAuthenticated}
+              />
+            )}
+            {currentStep === 3 && (
+              <Step3Payment
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                couponCode={couponCode}
+                setCouponCode={setCouponCode}
+                appliedCoupon={appliedCoupon}
+                onApplyCoupon={handleApplyCoupon}
+                onRemoveCoupon={handleRemoveCoupon}
+              />
+            )}
+            {currentStep === 4 && (
+              <Step4Summary
+                items={items}
+                formData={formData}
+                deliveryMethod={deliveryMethod}
+                paymentMethod={paymentMethod}
+                subtotal={subtotal}
+                deliveryPrice={deliveryPrice}
+                discount={discount}
+                total={total}
+                appliedCoupon={appliedCoupon}
+                formatPrice={formatPrice}
+              />
+            )}
+          </div>
+
+          {/* Footer with Navigation */}
+          <div className="px-6 py-4 border-t bg-muted/50">
+            <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="name">Nome Completo *</Label>
+                {currentStep > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePreviousStep}
+                    disabled={isProcessing}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatPrice(total)}
+                  </p>
+                </div>
+
+                {currentStep < 4 ? (
+                  <Button
+                    onClick={handleNextStep}
+                    disabled={!canProceedToNextStep() || isProcessing}
+                    size="lg"
+                  >
+                    Continuar
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isProcessing}
+                    size="lg"
+                  >
+                    {isProcessing ? "Processando..." : "Finalizar Pedido"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* STEP COMPONENTS                                                            */
+/* -------------------------------------------------------------------------- */
+
+interface Step1CartProps {
+  items: any[];
+}
+
+interface Step2DeliveryProps {
+  formData: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    notes: string;
+  };
+  setFormData: (data: any) => void;
+  deliveryMethod: DeliveryMethod;
+  setDeliveryMethod: (method: DeliveryMethod) => void;
+  isAuthenticated: boolean;
+}
+
+interface Step3PaymentProps {
+  paymentMethod: PaymentMethod;
+  setPaymentMethod: (method: PaymentMethod) => void;
+  couponCode: string;
+  setCouponCode: (code: string) => void;
+  appliedCoupon: keyof typeof DISCOUNT_COUPONS | null;
+  onApplyCoupon: () => void;
+  onRemoveCoupon: () => void;
+}
+
+interface Step4SummaryProps {
+  items: any[];
+  formData: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    notes: string;
+  };
+  deliveryMethod: DeliveryMethod;
+  paymentMethod: PaymentMethod;
+  subtotal: number;
+  deliveryPrice: number;
+  discount: number;
+  total: number;
+  appliedCoupon: keyof typeof DISCOUNT_COUPONS | null;
+  formatPrice: (price: number) => string;
+}
+
+const Step1Cart = ({ items }: Step1CartProps) => {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold flex items-center gap-2">
+        <Package className="h-5 w-5" />
+        Itens do Pedido ({items.length})
+      </h3>
+      
+      <div className="space-y-3">
+        {items.map((item: any) => (
+          <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
+            <div className="flex-1">
+              <h4 className="font-medium">{item.name}</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quantidade: {item.quantity}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold">
+                {formatPrice(item.price * item.quantity)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatPrice(item.price)} cada
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const Step2Delivery = ({ 
+  formData, 
+  setFormData, 
+  deliveryMethod, 
+  setDeliveryMethod,
+  isAuthenticated 
+}: Step2DeliveryProps) => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <UserIcon className="h-5 w-5" />
+          Dados Pessoais
+        </h3>
+        <div className="grid gap-4">
+          <div>
+            <Label htmlFor="name">Nome Completo *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Seu nome completo"
+              required
+              disabled={isAuthenticated}
+            />
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Seu nome completo"
+                  id="email"
+                  type="email"
+                  className="pl-10"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="seu@email.com"
                   required
                   disabled={isAuthenticated}
                 />
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      className="pl-10"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="seu@email.com"
-                      required
-                      disabled={isAuthenticated}
-                    />
+            </div>
+            <div>
+              <Label htmlFor="phone">Telefone *</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  className="pl-10"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                  required
+                  disabled={isAuthenticated}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <MapPin className="h-5 w-5" />
+          Endereço de Entrega
+        </h3>
+        <Textarea
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          placeholder="Rua, número, complemento, bairro, cidade - CEP"
+          rows={3}
+          required
+        />
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <Truck className="h-5 w-5" />
+          Método de Entrega
+        </h3>
+        <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod}>
+          {Object.entries(DELIVERY_OPTIONS).map(([key, option]) => (
+            <div key={key} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+              <RadioGroupItem value={key} id={key} />
+              <Label htmlFor={key} className="flex-1 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{option.label}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {option.days}
+                    </p>
                   </div>
+                  <p className="font-semibold">
+                    {option.price === 0 ? "Grátis" : `R$ ${option.price.toFixed(2)}`}
+                  </p>
                 </div>
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+    </div>
+  );
+};
+
+const Step3Payment = ({
+  paymentMethod,
+  setPaymentMethod,
+  couponCode,
+  setCouponCode,
+  appliedCoupon,
+  onApplyCoupon,
+  onRemoveCoupon
+}: Step3PaymentProps) => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <CreditCard className="h-5 w-5" />
+          Forma de Pagamento
+        </h3>
+        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+            <RadioGroupItem value="pix" id="pix" />
+            <Label htmlFor="pix" className="flex-1 cursor-pointer">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="phone">Telefone *</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      className="pl-10"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="(11) 99999-9999"
-                      required
-                      disabled={isAuthenticated}
-                    />
-                  </div>
+                  <p className="font-medium">PIX</p>
+                  <p className="text-sm text-muted-foreground">Aprovação instantânea</p>
                 </div>
+                <Badge variant="secondary">Recomendado</Badge>
               </div>
-            </div>
+            </Label>
           </div>
 
-          <Separator />
-
-          {/* Endereço */}
-          <div className="space-y-4">
-            <h3 className="font-semibold flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Endereço de Entrega
-            </h3>
-            <Textarea
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Rua, número, complemento, bairro, cidade - CEP"
-              rows={3}
-              required
-            />
-          </div>
-
-          {/* Cupom de Desconto */}
-          <div className="space-y-4">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              Cupom de Desconto
-            </h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Digite seu cupom"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                disabled={!!appliedCoupon}
-              />
-              {appliedCoupon ? (
-                <Button type="button" variant="outline" onClick={handleRemoveCoupon}>
-                  Remover
-                </Button>
-              ) : (
-                <Button type="button" onClick={handleApplyCoupon}>
-                  Aplicar
-                </Button>
-              )}
-            </div>
-            {appliedCoupon && (
-              <Badge className="bg-green-500">
-                <Percent className="h-3 w-3 mr-1" />
-                {DISCOUNT_COUPONS[appliedCoupon].label}
-              </Badge>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Cupons disponíveis: PRIMEIRA, ABREAI10, ABREAI15, ABREAI20, FRETEGRATIS
-            </p>
-          </div>
-
-          {/* Observações */}
-          <div className="space-y-4">
-            <Label htmlFor="notes">Observações (opcional)</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Alguma observação sobre seu pedido?"
-              rows={2}
-            />
-          </div>
-
-          <Separator />
-
-          {/* Resumo do Pedido */}
-          <div className="space-y-4 bg-muted p-4 rounded-lg">
-            <h3 className="font-semibold">Resumo do Pedido</h3>
-            <div className="space-y-2 text-sm">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between">
-                  <span>
-                    {item.quantity}x {item.name}
-                  </span>
-                  <span>
-                    R$ {(item.price * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-              <Separator />
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>R$ {subtotal.toFixed(2)}</span>
+          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+            <RadioGroupItem value="card" id="card" />
+            <Label htmlFor="card" className="flex-1 cursor-pointer">
+              <div>
+                <p className="font-medium">Cartão de Crédito</p>
+                <p className="text-sm text-muted-foreground">Parcele em até 3x sem juros</p>
               </div>
-              <div className="flex justify-between">
-                <span>Frete</span>
-                <span className={shipping === 0 ? "text-green-600 font-medium" : ""}>
-                  {shipping === 0 ? "GRÁTIS" : `R$ ${shipping.toFixed(2)}`}
-                </span>
-              </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Desconto</span>
-                  <span>-R$ {discount.toFixed(2)}</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between font-bold text-lg">
-                <span>TOTAL</span>
-                <span>R$ {total.toFixed(2)}</span>
-              </div>
-            </div>
+            </Label>
           </div>
 
-          {/* Botões */}
-          <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancelar
+          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+            <RadioGroupItem value="boleto" id="boleto" />
+            <Label htmlFor="boleto" className="flex-1 cursor-pointer">
+              <div>
+                <p className="font-medium">Boleto Bancário</p>
+                <p className="text-sm text-muted-foreground">Vencimento em 3 dias úteis</p>
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+          <Tag className="h-5 w-5" />
+          Cupom de Desconto
+        </h3>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Digite seu cupom"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            disabled={!!appliedCoupon}
+          />
+          {appliedCoupon ? (
+            <Button type="button" variant="outline" onClick={onRemoveCoupon}>
+              Remover
             </Button>
-            <Button type="submit" disabled={isProcessing} className="flex-1">
-              {isProcessing ? "Processando..." : "Confirmar Pedido"}
+          ) : (
+            <Button type="button" onClick={onApplyCoupon}>
+              Aplicar
             </Button>
+          )}
+        </div>
+        {appliedCoupon && (
+          <Badge className="bg-green-500 mt-2">
+            <Percent className="h-3 w-3 mr-1" />
+            {DISCOUNT_COUPONS[appliedCoupon].label}
+          </Badge>
+        )}
+        <p className="text-xs text-muted-foreground mt-2">
+          Cupons disponíveis: PRIMEIRA, ABREAI10, ABREAI15, ABREAI20, FRETEGRATIS
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const Step4Summary = ({
+  items,
+  formData,
+  deliveryMethod,
+  paymentMethod,
+  subtotal,
+  deliveryPrice,
+  discount,
+  total,
+  appliedCoupon,
+  formatPrice
+}: Step4SummaryProps) => {
+  const paymentMethodLabel: Record<PaymentMethod, string> = {
+    pix: "PIX",
+    card: "Cartão de Crédito",
+    boleto: "Boleto Bancário"
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Check className="h-5 w-5 text-primary" />
+          Resumo do Pedido
+        </h3>
+
+        {/* Items */}
+        <div className="space-y-2 mb-4">
+          <p className="font-medium text-sm">Itens ({items.length}):</p>
+          {items.map((item: any) => (
+            <div key={item.id} className="flex justify-between text-sm">
+              <span>{item.quantity}x {item.name}</span>
+              <span>{formatPrice(item.price * item.quantity)}</span>
+            </div>
+          ))}
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Customer Info */}
+        <div className="space-y-2 mb-4">
+          <p className="font-medium text-sm">Dados do Cliente:</p>
+          <p className="text-sm text-muted-foreground">{formData.name}</p>
+          <p className="text-sm text-muted-foreground">{formData.email}</p>
+          <p className="text-sm text-muted-foreground">{formData.phone}</p>
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Delivery */}
+        <div className="space-y-2 mb-4">
+          <p className="font-medium text-sm">Entrega:</p>
+          <p className="text-sm text-muted-foreground">{formData.address}</p>
+          <p className="text-sm text-muted-foreground">
+            {DELIVERY_OPTIONS[deliveryMethod].label} - {DELIVERY_OPTIONS[deliveryMethod].days}
+          </p>
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Payment */}
+        <div className="space-y-2 mb-4">
+          <p className="font-medium text-sm">Pagamento:</p>
+          <p className="text-sm text-muted-foreground">{paymentMethodLabel[paymentMethod]}</p>
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Totals */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>{formatPrice(subtotal)}</span>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          <div className="flex justify-between text-sm">
+            <span>Entrega ({DELIVERY_OPTIONS[deliveryMethod].label})</span>
+            <span className={deliveryPrice === 0 ? "text-green-600 font-medium" : ""}>
+              {deliveryPrice === 0 ? "GRÁTIS" : formatPrice(deliveryPrice)}
+            </span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Desconto</span>
+              <span>-{formatPrice(discount)}</span>
+            </div>
+          )}
+          <Separator />
+          <div className="flex justify-between font-bold text-lg">
+            <span>TOTAL</span>
+            <span className="text-primary">{formatPrice(total)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-900">
+          ℹ️ Ao clicar em "Finalizar Pedido", você será redirecionado para o WhatsApp para confirmar seu pedido.
+        </p>
+      </div>
+    </div>
   );
 };
 

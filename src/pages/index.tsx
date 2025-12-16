@@ -10,7 +10,7 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import ContactForm from "@/components/ContactForm";
 import Footer from "@/components/Footer";
-import ChatSupport from "@/components/Chatsupport ";
+import ChatSupport from "@/components/CheckoutModalSteps";
 
 const Index = () => {
   return (
