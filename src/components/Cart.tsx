@@ -19,7 +19,7 @@ interface CartProps {
 
 const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  // const [ setIsCheckoutOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -57,7 +57,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
   const handleCheckout = () => {
     if (items.length === 0) return;
     setIsOpen(false);
-    setIsCheckoutOpen(true);
+    // setIsCheckoutOpen(true);
   };
 
   return (
