@@ -3,7 +3,8 @@ import { Button } from "./ui/button";
 import Cart from "./Cart";
 import Favorites from "./Favorites";
 import OrderTracking from "./OrderTracking";
-import { useCart } from "../hooks/use-cart";
+import UserProfile from "./UserProfile";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
   const { items, updateQuantity, removeItem, checkout } = useCart();
@@ -17,7 +18,7 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <a href="#sobre" className="text-sm font-medium  text-white hover:text-primary transition-colors">
+            <a href="#sobre" className="text-sm font-medium text-white hover:text-primary transition-colors">
               Sobre
             </a>
             <a href="#galeria" className="text-sm font-medium text-white hover:text-primary transition-colors">
@@ -27,13 +28,16 @@ const Navbar = () => {
               Como Funciona
             </a>
             
-            {/* Novo: Botão de Rastreamento */}
+            {/* Novo: Perfil do Usuário */}
+            <UserProfile />
+            
+            {/* Botão de Rastreamento */}
             <OrderTracking />
             
-            {/* Novo: Botão de Favoritos */}
+            {/* Botão de Favoritos */}
             <Favorites />
             
-            {/* Carrinho Melhorado */}
+            {/* Carrinho */}
             <Cart 
               items={items}
               onUpdateQuantity={updateQuantity}
@@ -51,6 +55,7 @@ const Navbar = () => {
           </div>
 
           <div className="flex md:hidden items-center gap-2">
+            <UserProfile />
             <OrderTracking />
             <Favorites />
             <Cart 

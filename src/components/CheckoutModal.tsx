@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -13,10 +13,10 @@ import {
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
-import { ShoppingCart, Tag, Mail, Phone, MapPin, User, Percent } from "lucide-react";
-import { useCart } from "@/hooks/use-cart";
+import { ShoppingCart, Tag, Mail, Phone, MapPin, User as UserIcon, Percent } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/hooks/use-orders";
-// import emailjs from "@emailjs/browser";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -29,7 +29,6 @@ type DiscountCoupon = {
   freeShipping?: boolean;
 };
 
-
 // Cupons de desconto disponíveis
 const DISCOUNT_COUPONS: Record<string, DiscountCoupon> = {
   PRIMEIRA: { discount: 10, label: "10% OFF - Primeira Compra" },
@@ -39,9 +38,9 @@ const DISCOUNT_COUPONS: Record<string, DiscountCoupon> = {
   FRETEGRATIS: { discount: 0, label: "Frete Grátis", freeShipping: true },
 };
 
-
 const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const { createOrder } = useOrders();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -52,6 +51,19 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
     address: "",
     notes: "",
   });
+
+  // Preencher dados do usuário automaticamente se estiver logado
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address || "",
+        notes: "",
+      });
+    }
+  }, [isAuthenticated, user]);
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<keyof typeof DISCOUNT_COUPONS | null>(null);
@@ -80,39 +92,6 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
     toast.info("Cupom removido");
   };
 
-  const sendConfirmationEmail = async (orderData: any) => {
-    try {
-      // Configurar EmailJS (você precisará criar conta grátis em emailjs.com)
-      // e substituir os IDs abaixo
-      
-      const templateParams = {
-        to_email: formData.email,
-        to_name: formData.name,
-        order_id: orderData.id,
-        tracking_code: orderData.trackingCode,
-        items_list: items.map(item => 
-          `${item.quantity}x ${item.name} - R$ ${(item.price * item.quantity).toFixed(2)}`
-        ).join('\n'),
-        total: total.toFixed(2),
-        delivery_address: formData.address,
-      };
-
-      // Descomente quando configurar EmailJS
-      // await emailjs.send(
-      //   'YOUR_SERVICE_ID',
-      //   'YOUR_TEMPLATE_ID',
-      //   templateParams,
-      //   'YOUR_PUBLIC_KEY'
-      // );
-
-      console.log("Email seria enviado:", templateParams);
-      toast.success("Email de confirmação enviado! 📧");
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-      // Não bloqueia o pedido se o email falhar
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -138,9 +117,6 @@ const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
         customerPhone: formData.phone,
         deliveryAddress: formData.address,
       });
-
-      // Enviar email de confirmação
-      await sendConfirmationEmail(order);
 
       // Preparar mensagem WhatsApp
       const itemsList = items
@@ -188,14 +164,18 @@ Confirme este pedido para prosseguir! ✅
           duration: 5000,
         });
 
-        // Resetar formulário
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          address: "",
-          notes: "",
-        });
+        // Resetar notas (manter outros dados se estiver logado)
+        if (!isAuthenticated) {
+          setFormData({
+            name: "",
+            email: "",
+            phone: "",
+            address: "",
+            notes: "",
+          });
+        } else {
+          setFormData(prev => ({ ...prev, notes: "" }));
+        }
         setAppliedCoupon(null);
         setCouponCode("");
       }, 500);
@@ -217,7 +197,9 @@ Confirme este pedido para prosseguir! ✅
             Finalizar Pedido
           </DialogTitle>
           <DialogDescription>
-            Preencha seus dados para concluir a compra
+            {isAuthenticated 
+              ? "Seus dados já estão preenchidos. Revise e confirme o pedido."
+              : "Preencha seus dados para concluir a compra"}
           </DialogDescription>
         </DialogHeader>
 
@@ -225,7 +207,7 @@ Confirme este pedido para prosseguir! ✅
           {/* Dados Pessoais */}
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
-              <User className="h-4 w-4" />
+              <UserIcon className="h-4 w-4" />
               Dados Pessoais
             </h3>
             <div className="grid gap-4">
@@ -237,6 +219,7 @@ Confirme este pedido para prosseguir! ✅
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Seu nome completo"
                   required
+                  disabled={isAuthenticated}
                 />
               </div>
               <div className="grid md:grid-cols-2 gap-4">
@@ -252,6 +235,7 @@ Confirme este pedido para prosseguir! ✅
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="seu@email.com"
                       required
+                      disabled={isAuthenticated}
                     />
                   </div>
                 </div>
@@ -267,6 +251,7 @@ Confirme este pedido para prosseguir! ✅
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="(11) 99999-9999"
                       required
+                      disabled={isAuthenticated}
                     />
                   </div>
                 </div>
