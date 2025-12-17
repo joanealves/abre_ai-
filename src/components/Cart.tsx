@@ -1,84 +1,78 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "./ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetDescription,
+} from "./ui/sheet";
 import { ShoppingCart, Trash2, Plus, Minus, Heart } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-// import CheckoutModal from "./CheckoutModal";
+import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/hooks/use-favorites";
-import type { CartItem } from "@/types/types";
+import CheckoutModal from "./Checkoutmodal ";
 
-export type { CartItem };
 
-interface CartProps {
-  items: CartItem[];
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemoveItem: (id: number) => void;
-  onCheckout: () => void;
-}
-
-const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
+const Cart = () => {
   const [isOpen, setIsOpen] = useState(false);
-  // const [ setIsCheckoutOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  
+  const { items, updateQuantity, removeItem, getItemCount, getTotalPrice } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(price);
   };
 
-  const getCategoryColor = (category: CartItem["category"]) => {
-    switch (category) {
-      case "rolee":
-      case "bebidas":
-      case "cafe":
-      case "churrasco":
-        return "bg-rolee-dark text-rolee-golden";
-      case "cestas":
-      case "fit":
-      case "vegan":
-        return "bg-cestas-base text-cestas-sage";
-      case "chocolates":
-        return "bg-cestas-sage text-white";
-      case "petiscos":
-        return "bg-primary text-primary-foreground";
-      case "namorados":
-        return "bg-cestas-rose text-white";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
+  const getCategoryColor = (category: string) => {
+    const colorMap: Record<string, string> = {
+      rolee: "bg-rolee-dark text-rolee-golden",
+      bebidas: "bg-rolee-dark text-rolee-golden",
+      cafe: "bg-rolee-dark text-rolee-golden",
+      churrasco: "bg-rolee-dark text-rolee-golden",
+      cestas: "bg-cestas-base text-cestas-sage",
+      fit: "bg-cestas-base text-cestas-sage",
+      vegan: "bg-cestas-base text-cestas-sage",
+      chocolates: "bg-cestas-sage text-white",
+      petiscos: "bg-primary text-primary-foreground",
+      namorados: "bg-cestas-rose text-white",
+    };
+    return colorMap[category] || "bg-muted text-muted-foreground";
   };
 
   const handleCheckout = () => {
     if (items.length === 0) return;
+    
+    // Fecha o carrinho e abre o checkout
     setIsOpen(false);
-    // setIsCheckoutOpen(true);
+    setTimeout(() => {
+      setIsCheckoutOpen(true);
+    }, 300); // Delay para animação suave
   };
+
+  const totalItems = getItemCount();
+  const totalPrice = getTotalPrice();
 
   return (
     <>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="relative"
-          >
+          <Button variant="outline" size="icon" className="relative">
             <ShoppingCart className="h-5 w-5" />
             {totalItems > 0 && (
-              <Badge 
-                className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center bg-primary text-primary-foreground"
-              >
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center bg-primary text-primary-foreground">
                 {totalItems}
               </Badge>
             )}
           </Button>
         </SheetTrigger>
+        
         <SheetContent className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
@@ -86,9 +80,9 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
               Seu Carrinho
             </SheetTitle>
             <SheetDescription>
-              {totalItems === 0 
-                ? "Seu carrinho está vazio" 
-                : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} no carrinho`}
+              {totalItems === 0
+                ? "Seu carrinho está vazio"
+                : `${totalItems} ${totalItems === 1 ? "item" : "itens"} no carrinho`}
             </SheetDescription>
           </SheetHeader>
 
@@ -112,19 +106,25 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <h4 className="font-semibold text-sm">{item.name}</h4>
-                            <Badge 
-                              variant="outline" 
-                              className={`mt-1 text-xs ${getCategoryColor(item.category)}`}
+                            <Badge
+                              variant="outline"
+                              className={`mt-1 text-xs ${getCategoryColor(
+                                item.category
+                              )}`}
                             >
                               {item.category}
                             </Badge>
                           </div>
+                          
                           <div className="flex gap-1">
+                            {/* Botão de Favoritar */}
                             <Button
                               variant="ghost"
                               size="icon"
                               className={`h-8 w-8 ${
-                                isFavorite(item.id) ? "text-red-500" : "text-muted-foreground"
+                                isFavorite(item.id)
+                                  ? "text-red-500"
+                                  : "text-muted-foreground"
                               }`}
                               onClick={() =>
                                 toggleFavorite({
@@ -137,68 +137,91 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
                               }
                             >
                               <Heart
-                                className={`h-4 w-4 ${isFavorite(item.id) ? "fill-current" : ""}`}
+                                className={`h-4 w-4 ${
+                                  isFavorite(item.id) ? "fill-current" : ""
+                                }`}
                               />
                             </Button>
+                            
+                            {/* Botão de Remover */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => onRemoveItem(item.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => removeItem(item.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-3">
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {item.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between mt-2">
+                          {/* Controles de Quantidade */}
                           <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity - 1)
+                              }
+                              disabled={item.quantity <= 1}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="w-8 text-center font-medium">{item.quantity}</span>
+                            
+                            <span className="w-8 text-center font-semibold">
+                              {item.quantity}
+                            </span>
+                            
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
-                          <span className="font-bold text-lg">
+
+                          {/* Preço */}
+                          <p className="font-bold text-primary">
                             {formatPrice(item.price * item.quantity)}
-                          </span>
+                          </p>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
+                {/* Resumo e Checkout */}
                 <div className="mt-6 space-y-4 border-t pt-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-muted-foreground">Subtotal:</span>
                       <span>{formatPrice(totalPrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Frete</span>
+                      <span className="text-muted-foreground">Frete:</span>
                       <span>Calculado no checkout</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
+                      <span>Total:</span>
                       <span className="text-primary">{formatPrice(totalPrice)}</span>
                     </div>
                   </div>
 
-                  <Button 
-                    className="w-full h-12 text-base font-semibold" 
+                  <Button
+                    className="w-full h-12 text-base font-semibold"
                     size="lg"
                     onClick={handleCheckout}
                   >
@@ -206,7 +229,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    💡 Cupons de desconto disponíveis no checkout
+                    💳 Formas de pagamento disponíveis no checkout
                   </p>
                 </div>
               </>
@@ -215,10 +238,11 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem }: CartProps) => {
         </SheetContent>
       </Sheet>
 
-      {/* <CheckoutModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
-      /> */}
+      {/* Modal de Checkout */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+      />
     </>
   );
 };

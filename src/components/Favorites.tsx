@@ -1,29 +1,49 @@
 import { Heart, ShoppingCart, X } from "lucide-react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "./ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetDescription,
+} from "./ui/sheet";
 import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 import { useFavorites } from "@/hooks/use-favorites";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/contexts/CartContext";
+
+/**
+ * Favorites - Componente de Favoritos
+ * 
+ * RESPONSABILIDADES:
+ * - Exibir itens favoritos
+ * - Adicionar favoritos ao carrinho
+ * - Remover favoritos
+ * 
+ * INTEGRAÇÃO:
+ * - useFavorites (gerenciar favoritos)
+ * - CartContext (adicionar ao carrinho)
+ */
 
 const Favorites = () => {
   const { favorites, removeFavorite, favoritesCount } = useFavorites();
-  const { addItem } = useCart();
+  const { addItem, isInCart, getItemQuantity } = useCart();
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "rolee":
-      case "bebidas":
-        return "bg-rolee-dark text-rolee-golden";
-      case "cestas":
-        return "bg-cestas-base text-cestas-sage";
-      case "chocolates":
-        return "bg-cestas-sage text-white";
-      case "petiscos":
-        return "bg-primary text-primary-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
+    const colorMap: Record<string, string> = {
+      rolee: "bg-rolee-dark text-rolee-golden",
+      bebidas: "bg-rolee-dark text-rolee-golden",
+      cafe: "bg-rolee-dark text-rolee-golden",
+      churrasco: "bg-rolee-dark text-rolee-golden",
+      cestas: "bg-cestas-base text-cestas-sage",
+      fit: "bg-cestas-base text-cestas-sage",
+      vegan: "bg-cestas-base text-cestas-sage",
+      chocolates: "bg-cestas-sage text-white",
+      petiscos: "bg-primary text-primary-foreground",
+      namorados: "bg-cestas-rose text-white",
+    };
+    return colorMap[category] || "bg-muted text-muted-foreground";
   };
 
   const handleAddToCart = (item: typeof favorites[0]) => {
@@ -32,7 +52,15 @@ const Favorites = () => {
       name: item.name,
       price: item.price,
       category: item.category,
+      description: item.description,
     });
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(price);
   };
 
   return (
@@ -47,6 +75,7 @@ const Favorites = () => {
           )}
         </Button>
       </SheetTrigger>
+      
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
@@ -56,7 +85,9 @@ const Favorites = () => {
           <SheetDescription>
             {favoritesCount === 0
               ? "Nenhum favorito ainda"
-              : `${favoritesCount} ${favoritesCount === 1 ? "item favorito" : "itens favoritos"}`}
+              : `${favoritesCount} ${
+                  favoritesCount === 1 ? "item favorito" : "itens favoritos"
+                }`}
           </SheetDescription>
         </SheetHeader>
 
@@ -64,52 +95,86 @@ const Favorites = () => {
           {favorites.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Heart className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-2">
+                Nenhum favorito adicionado
+              </p>
+              <p className="text-sm text-muted-foreground">
                 Adicione produtos aos favoritos para salvá-los aqui
               </p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-              {favorites.map((item) => (
-                <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm mb-1">{item.name}</h4>
-                        <p className="text-xs text-muted-foreground mb-2">{item.description}</p>
-                        <Badge variant="outline" className={`text-xs ${getCategoryColor(item.category)}`}>
-                          {item.category}
-                        </Badge>
+              {favorites.map((item) => {
+                const inCart = isInCart(item.id);
+                const cartQuantity = getItemQuantity(item.id);
+                
+                return (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-semibold text-sm mb-1">
+                              {item.name}
+                            </h4>
+                            
+                            {/* Indicador se está no carrinho */}
+                            {inCart && (
+                              <Badge
+                                variant="secondary"
+                                className="ml-2 text-xs"
+                              >
+                                {cartQuantity}x no carrinho
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {item.description}
+                          </p>
+                          
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getCategoryColor(item.category)}`}
+                          >
+                            {item.category}
+                          </Badge>
+                        </div>
+                        
+                        {/* Botão de Remover dos Favoritos */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600 ml-2"
+                          onClick={() => removeFavorite(item.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-500 hover:text-red-600"
-                        onClick={() => removeFavorite(item.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold">
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(item.price)}
-                      </p>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(item)}
-                        className="gap-2"
-                      >
-                        <ShoppingCart className="h-4 w-4" />
-                        Adicionar
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-bold text-primary">
+                          {formatPrice(item.price)}
+                        </p>
+                        
+                        {/* Botão de Adicionar ao Carrinho */}
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddToCart(item)}
+                          className="gap-2"
+                          variant={inCart ? "outline" : "default"}
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                          {inCart ? "Adicionar mais" : "Adicionar"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
